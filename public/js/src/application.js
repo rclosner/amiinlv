@@ -220,7 +220,7 @@ function geocodeByAddress (address) {
  */ 
 
 jQuery(document).ready(function () {
-  $.getJSON("data/region.geojson", function (data) {
+  $.getJSON(config.fileName, function (data) {
     json = data;
     init();
   });
