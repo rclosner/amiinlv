@@ -1,17 +1,7 @@
 ;(function(e,t,n){function r(n,i){if(!t[n]){if(!e[n]){var s=typeof require=="function"&&require;if(!i&&s)return s(n,!0);throw new Error("Cannot find module '"+n+"'")}var o=t[n]={exports:{}};e[n][0](function(t){var i=e[n][1][t];return r(i?i:t)},o,o.exports)}return t[n].exports}for(var i=0;i<n.length;i++)r(n[i]);return r})({1:[function(require,module,exports){
-var guj  = require("geojson-utils")
-var json = {}
-
 var GOOGLE_MAPS_URL = "http://maps.googleapis.com/maps/api/geocode/json";
 
-/**
- * Geocodes an address by querying the Google
- * Maps API.
- * @param {String} [address] the address
- * @param {Function} [callback] the callback function
- */
-
-function geocode (address, callback) {
+var geocode = function (address, callback) {
   var params = {
     address: address,
     sensor:  false
@@ -22,6 +12,35 @@ function geocode (address, callback) {
   $.ajax(url, { success: callback });
 }
 
+module.exports = geocode;
+
+},{}],2:[function(require,module,exports){
+var config = {
+  latitude: 36.18,
+  longitude: -115.14,
+  initialZoom: 12,
+  finalZoom: 14
+}
+
+module.exports = config;
+
+},{}],3:[function(require,module,exports){
+var guj     = require("geojson-utils"),
+    geocode = require("./geocode"),
+    config  = require("../../../config");
+
+var json = {},
+    map,
+    latitude,
+    longitude;
+
+//--------------------
+// MAP VARIABLES
+//--------------------
+
+var MAP_ATTRIBUTION = "©2012 Nokia <a href=\"http://here.net/services/terms\">Terms of Use</a>"
+var TILE_LAYER_URL  = "https://maps.nlp.nokia.com/maptiler/v2/maptile/newest/normal.day/{z}/{x}/{y}/256/png8?lg=eng&token=61YWYROufLu_f8ylE0vn0Q&app_id=qIWDkliFCtLntLma2e6O"
+
 /**
  * Initializes the application and sets
  * event listeners
@@ -31,6 +50,12 @@ function init () {
   $("#input-target").on("click", onGetCurrentLocation);
   $("#input-go").on("click", onGo);
   $("#location-form").on("submit", onSubmit);
+  $(document).keydown(function (e) {
+    if (e.which == 27 && e.ctrlKey == false && e.metaKey == false) reset();
+  });
+  $('#input-location').focus();
+
+  createMap();
 }
 
 /**
@@ -38,7 +63,14 @@ function init () {
  */
 
 function reset () {
+  $('#marker').animate( {opacity: 0, top: '0'}, 0);
+  $('#alert').hide();
+  $('#answer').fadeOut(150, function() {
+    $('#question').fadeIn(150);
+    $('#input-location').focus();
+  });
 
+  setMapView(config.latitude, config.longitude, config.initialZoom);
 }
 
 /**
@@ -52,8 +84,53 @@ function render (answer) {
   $('#question').fadeOut(250, function() {
     $('#answer').fadeIn(250);
   });
+  $("#answer h1").html(answer)
+  setMapView(latitude, longitude, config.finalZoom);
 }
 
+/**
+ * Initializes the map and renders the geojson layer
+ */
+
+function createMap () {
+  map = L.map("map", {
+    dragging: false,
+      touchZoom: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false,
+      zoomControl: false
+  });
+
+  L.tileLayer(TILE_LAYER_URL, {
+    attribution: MAP_ATTRIBUTION,
+    maxZoom: 23
+  }).addTo(map);
+
+  var style = {
+    color: "#F11",
+    weight: 5,
+    opacity: 0.1
+  }
+
+  L.geoJson(json, {
+    style: style
+  }).addTo(map);
+
+  map.setView([config.latitude, config.longitude], config.initialZoom);
+}
+
+/**
+ * Sets the map view
+ * @param {String} [latitude] the latitude
+ * @param {String} [longitude] the longitude
+ * @param {Integer} [zoom] the zoom level
+ */
+
+function setMapView (lat, lng, zoom) {
+  map.setView([lat, lng], zoom);
+}
 
 /**
  * Checks to see whether a latitude and longitude
@@ -80,7 +157,7 @@ function checkWithinLimits (latitude, longitude) {
  */
 
 function onWithinLimits () {
-  render();
+  render("Yes");
 }
 
 /**
@@ -89,7 +166,7 @@ function onWithinLimits () {
  */
 
 function onOutsideLimits () {
-  render();
+  render("No");
 }
 
 /**
@@ -137,7 +214,8 @@ function geocodeByCurrentLocation () {
 
     geolocator.getCurrentPosition(
         function (position) {
-          checkWithinLimits(position.coords.latitude, position.coords.longitude);
+          latitude = position.coords.latitude, longitude = position.coords.longitude;
+          checkWithinLimits(latitude, longitude);
         },
         function () {
           alert("Error getting current position");
@@ -157,7 +235,8 @@ function geocodeByAddress (address) {
   geocode(address, function (res) {
     if (res && res.results.length > 0) {
       var result = res.results[0].geometry.location;
-      checkWithinLimits(result.lat, result.lng);
+      latitude = result.lat, longitude = result.lng
+      checkWithinLimits(latitude, longitude);
     }
   });
 }
@@ -175,7 +254,7 @@ jQuery(document).ready(function () {
 });
 
 
-},{"geojson-utils":2}],2:[function(require,module,exports){
+},{"./geocode":1,"../../../config":2,"geojson-utils":4}],4:[function(require,module,exports){
 (function () {
   var gju = this.gju = {};
 
@@ -541,5 +620,5 @@ jQuery(document).ready(function () {
 
 })();
 
-},{}]},{},[1])
+},{}]},{},[3])
 ;
