@@ -5,7 +5,8 @@ var guj     = require("geojson-utils"),
 var json = {},
     map,
     latitude,
-    longitude;
+    longitude,
+    marker;
 
 //--------------------
 // MAP VARIABLES
@@ -36,6 +37,7 @@ function init () {
  */
 
 function reset () {
+  $("#input-location").val("")
   $('#marker').animate( {opacity: 0, top: '0'}, 0);
   $('#alert').hide();
   $('#answer').fadeOut(150, function() {
@@ -43,6 +45,7 @@ function reset () {
     $('#input-location').focus();
   });
 
+  map.removeLayer(marker);
   setMapView(config.latitude, config.longitude, config.initialZoom);
 }
 
@@ -51,9 +54,7 @@ function reset () {
  */
 
 function render (answer) {
-  $('#marker').css('display', 'block');
-  $('#marker').animate({ opacity: 0 }, 0);
-  $('#marker').animate( {opacity: 1, top: '200'}, 250);
+  marker = L.marker([latitude, longitude]).addTo(map);
   $('#question').fadeOut(250, function() {
     $('#answer').fadeIn(250);
   });
