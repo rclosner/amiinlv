@@ -15,6 +15,18 @@ var geocode = function (address, callback) {
 module.exports = geocode;
 
 },{}],2:[function(require,module,exports){
+var getCurrentLocation = function (success, error) {
+  var geolocator = window.navigator.geolocation;
+  if (geolocator) {
+    geolocator.getCurrentPosition(success, error);
+  } else {
+    alert("Browser does not support geolocation");
+  }
+}
+
+module.exports = getCurrentLocation;
+
+},{}],3:[function(require,module,exports){
 var config = {
   latitude: 36.18,
   longitude: -115.14,
@@ -25,39 +37,108 @@ var config = {
 
 module.exports = config;
 
-},{}],3:[function(require,module,exports){
-var guj     = require("geojson-utils"),
-    geocode = require("./geocode"),
-    config  = require("../config");
+},{}],4:[function(require,module,exports){
+var config = require("../config");
+var MAP_ATTRIBUTION = "©2012 Nokia <a href=\"http://here.net/services/terms\">Terms of Use</a>"
+
+var TILE_LAYER_URL  = "https://maps.nlp.nokia.com/maptiler/v2/maptile/newest/normal.day/{z}/{x}/{y}/256/png8?lg=eng&token=61YWYROufLu_f8ylE0vn0Q&app_id=qIWDkliFCtLntLma2e6O"
+
+var REGION_LAYER_STYLE ={
+  color: "#F11",
+  weight: 5,
+  opacity: 0.1
+}
+
+var Map = function (json) {
+  this.json = json;
+
+  this.map = L.map("map", {
+    dragging: false,
+    touchZoom: false,
+    scrollWheelZoom: false,
+    doubleClickZoom: false,
+    boxZoom: false,
+    keyboard: false,
+    zoomControl: false
+  });
+
+  this.markers = [];
+}
+
+Map.prototype.render = function () {
+  L.tileLayer(TILE_LAYER_URL, {
+    attribution: MAP_ATTRIBUTION,
+    maxZoom: 23
+  }).addTo(this.map);
+
+  L.geoJson(this.json, {
+    style: REGION_LAYER_STYLE
+  }).addTo(this.map);
+
+  this.reset();
+}
+
+Map.prototype.reset = function () {
+  this.removeMarkers();
+  this.setLocation(config.latitude, config.longitude, config.initialZoom);
+}
+
+Map.prototype.setLocation = function (lat, lng, zoom) {
+  this.map.setView([lat, lng], zoom);
+  return true;
+}
+
+Map.prototype.createMarker = function (lat, lng) {
+  var marker = L.marker([lat, lng]).addTo(this.map);
+  this.markers.push(marker);
+  return true;
+}
+
+Map.prototype.removeMarkers = function () {
+  for (var i = 0; i < this.markers.length; i++) {
+    this.map.removeLayer(this.markers[i]);
+  };
+  return true;
+}
+
+module.exports = Map;
+
+},{"../config":3}],5:[function(require,module,exports){
+var guj = require("geojson-utils"),
+    geocodeAddress = require("./geocode"),
+    getCurrentLocation = require("./current_location"),
+    Map = require("./map"),
+    config = require("../config");
 
 var json = {},
     map,
     latitude,
-    longitude,
-    marker;
+    longitude;
 
 //--------------------
 // MAP VARIABLES
 //--------------------
 
-var MAP_ATTRIBUTION = "©2012 Nokia <a href=\"http://here.net/services/terms\">Terms of Use</a>"
-var TILE_LAYER_URL  = "https://maps.nlp.nokia.com/maptiler/v2/maptile/newest/normal.day/{z}/{x}/{y}/256/png8?lg=eng&token=61YWYROufLu_f8ylE0vn0Q&app_id=qIWDkliFCtLntLma2e6O"
 
 /**
  * Initializes the application and sets
  * event listeners
  */
 
-function init () {
+function init (data) {
+  json = data, map = new Map(data);
+
   $("#input-target").on("click", onGetCurrentLocation);
   $("#input-go").on("click", onGo);
   $("#location-form").on("submit", onSubmit);
   $(document).keydown(function (e) {
     if (e.which == 27 && e.ctrlKey == false && e.metaKey == false) reset();
   });
-  $('#input-location').focus();
+}
 
-  createMap();
+function render () {
+  $("#input-location").focus();
+  map.render();
 }
 
 /**
@@ -66,72 +147,27 @@ function init () {
 
 function reset () {
   $("#input-location").val("")
-  $('#marker').animate( {opacity: 0, top: '0'}, 0);
   $('#alert').hide();
   $('#answer').fadeOut(150, function() {
     $('#question').fadeIn(150);
     $('#input-location').focus();
   });
 
-  map.removeLayer(marker);
-  setMapView(config.latitude, config.longitude, config.initialZoom);
+  map.reset();
 }
 
 /**
  * Renders the answer and drops the pin on the map
  */
 
-function render (answer) {
-  marker = L.marker([latitude, longitude]).addTo(map);
+function setAnswer (answer) {
   $('#question').fadeOut(250, function() {
     $('#answer').fadeIn(250);
   });
   $("#answer h1").html(answer)
-  setMapView(latitude, longitude, config.finalZoom);
-}
 
-/**
- * Initializes the map and renders the geojson layer
- */
-
-function createMap () {
-  map = L.map("map", {
-    dragging: false,
-      touchZoom: false,
-      scrollWheelZoom: false,
-      doubleClickZoom: false,
-      boxZoom: false,
-      keyboard: false,
-      zoomControl: false
-  });
-
-  L.tileLayer(TILE_LAYER_URL, {
-    attribution: MAP_ATTRIBUTION,
-    maxZoom: 23
-  }).addTo(map);
-
-  var style = {
-    color: "#F11",
-    weight: 5,
-    opacity: 0.1
-  }
-
-  L.geoJson(json, {
-    style: style
-  }).addTo(map);
-
-  map.setView([config.latitude, config.longitude], config.initialZoom);
-}
-
-/**
- * Sets the map view
- * @param {String} [latitude] the latitude
- * @param {String} [longitude] the longitude
- * @param {Integer} [zoom] the zoom level
- */
-
-function setMapView (lat, lng, zoom) {
-  map.setView([lat, lng], zoom);
+  map.createMarker(latitude, longitude)
+  map.setLocation(latitude, longitude, config.finalZoom);
 }
 
 /**
@@ -159,7 +195,7 @@ function checkWithinLimits (latitude, longitude) {
  */
 
 function onWithinLimits () {
-  render("Yes");
+  setAnswer("Yes");
 }
 
 /**
@@ -168,7 +204,7 @@ function onWithinLimits () {
  */
 
 function onOutsideLimits () {
-  render("No");
+  setAnswer("No");
 }
 
 /**
@@ -210,31 +246,24 @@ function onSubmit (e) {
  */
 
 function geocodeByCurrentLocation () {
-  var geolocator = window.navigator.geolocation;
-
-  if (geolocator) {
-
-    geolocator.getCurrentPosition(
-        function (position) {
-          latitude = position.coords.latitude, longitude = position.coords.longitude;
-          checkWithinLimits(latitude, longitude);
-        },
-        function () {
-          alert("Error getting current position");
-        }
-        );
-
-  } else {
-    alert("Browser does not support geolocation");
+  var onSuccess = function (position) {
+    latitude = position.coords.latitude, longitude = position.coords.longitude;
+    checkWithinLimits(latitude, longitude);
   }
-}
+
+  var onError = function (err) {
+    alert("Error getting current position");
+  }
+
+  getCurrentLocation(onSuccess, onError);
+ }
 
 /**
  * Geocodes an address
  */ 
 
 function geocodeByAddress (address) {
-  geocode(address, function (res) {
+  geocodeAddress(address, function (res) {
     if (res && res.results.length > 0) {
       var result = res.results[0].geometry.location;
       latitude = result.lat, longitude = result.lng
@@ -250,13 +279,13 @@ function geocodeByAddress (address) {
 
 jQuery(document).ready(function () {
   $.getJSON(config.fileName, function (data) {
-    json = data;
-    init();
+    init(data);
+    render();
   });
 });
 
 
-},{"./geocode":1,"../config":2,"geojson-utils":4}],4:[function(require,module,exports){
+},{"./geocode":1,"./current_location":2,"./map":4,"../config":3,"geojson-utils":6}],6:[function(require,module,exports){
 (function () {
   var gju = this.gju = {};
 
@@ -622,5 +651,5 @@ jQuery(document).ready(function () {
 
 })();
 
-},{}]},{},[3])
+},{}]},{},[5])
 ;
