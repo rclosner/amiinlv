@@ -1,11 +1,14 @@
 var guj  = require("geojson-utils")
 var json = {}
 
-//------------------------
-// GOOGLE GEOCODE FUNCTION
-//------------------------
-
 var GOOGLE_MAPS_URL = "http://maps.googleapis.com/maps/api/geocode/json";
+
+/**
+ * Geocodes an address by querying the Google
+ * Maps API.
+ * @param {String} [address] the address
+ * @param {Function} [callback] the callback function
+ */
 
 function geocode (address, callback) {
   var params = {
@@ -18,9 +21,10 @@ function geocode (address, callback) {
   $.ajax(url, { success: callback });
 }
 
-//------------------------
-// INITIALIZE
-//------------------------
+/**
+ * Initializes the application and sets
+ * event listeners
+ */
 
 function init () {
   $("#input-target").on("click", onGetCurrentLocation);
@@ -28,9 +32,34 @@ function init () {
   $("#location-form").on("submit", onSubmit);
 }
 
+/**
+ * Resets the application to its initial state
+ */
+
 function reset () {
 
 }
+
+/**
+ * Renders the answer and drops the pin on the map
+ */
+
+function render (answer) {
+  $('#marker').css('display', 'block');
+  $('#marker').animate({ opacity: 0 }, 0);
+  $('#marker').animate( {opacity: 1, top: '200'}, 250);
+  $('#question').fadeOut(250, function() {
+    $('#answer').fadeIn(250);
+  });
+}
+
+
+/**
+ * Checks to see whether a latitude and longitude
+ * fall within the limits provided in region.json
+ * @param {String} [latitude] the latitude
+ * @param {String} [longitude] the longitude
+ */
 
 function checkWithinLimits (latitude, longitude) {
   var point   = { type: "Point", coordinates: [ longitude, latitude ] };
@@ -44,33 +73,49 @@ function checkWithinLimits (latitude, longitude) {
   }
 }
 
-function answer (msg) {
-  $('#marker').css('display', 'block');
-  $('#marker').animate({ opacity: 0 }, 0);
-  $('#marker').animate( {opacity: 1, top: '200'}, 250);
-  $('#question').fadeOut(250, function() {
-    $('#answer').fadeIn(250);
-  });
-}
+/**
+ * Displays an answer that specifies that the location
+ * is within the limits
+ */
 
 function onWithinLimits () {
-  answer();
+  render();
 }
 
+/**
+ * Displays an answer that specifies that the location
+ * is not within the limits
+ */
+
 function onOutsideLimits () {
-  answer();
+  render();
 }
+
+/**
+ * Gets the current location, and checks whether
+ * it is within the limits
+ */
 
 function onGetCurrentLocation () {
   geocodeByCurrentLocation();
   return false;
 }
 
-function onGo (e) {
+/**
+ * Submits the form, geocodes the address, and checks
+ * whether it is within the limits
+ */
+
+function onGo () {
   var $input = $("#input-location"), address = $input.val();
   geocodeByAddress(address);
   return false;
 }
+
+/**
+ * Submits the form, geocodes the address, and checks
+ * whether it is within the limits
+ */
 
 function onSubmit (e) {
   e.preventDefault();
@@ -79,9 +124,10 @@ function onSubmit (e) {
   return false;
 }
 
-//----------------------------
-// GEOCODE BY CURRENT LOCATION
-//----------------------------
+/**
+ * Gets the current location and checks whether it is
+ * within the limits
+ */
 
 function geocodeByCurrentLocation () {
   var geolocator = window.navigator.geolocation;
@@ -102,9 +148,9 @@ function geocodeByCurrentLocation () {
   }
 }
 
-//------------------------
-// GEOCODE BY ADDRESS
-//------------------------
+/**
+ * Geocodes an address
+ */ 
 
 function geocodeByAddress (address) {
   geocode(address, function (res) {
@@ -115,7 +161,15 @@ function geocodeByAddress (address) {
   });
 }
 
-$.getJSON("data/region.geojson", function (data) {
-  json = data;
-  init();
+/**
+ * Retrieves the region.json file and initializes
+ * the application
+ */ 
+
+jQuery(document).ready(function () {
+  $.getJSON("data/region.geojson", function (data) {
+    json = data;
+    init();
+  });
 });
+
