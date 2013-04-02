@@ -1,6 +1,6 @@
 var guj     = require("geojson-utils"),
     geocode = require("./geocode"),
-    config  = require("../../../config");
+    config  = require("../config");
 
 var json = {},
     map,

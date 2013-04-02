@@ -21,8 +21,8 @@
 
   "scripts": {
     "start": "node server.js",
-    "make":  "browserify public/js/src/application.js > public/js/application.js",
-    "watch": "browserify public/js/src/application.js -o public/js/application.js --watch --debug"
+    "make":  "browserify src/application.js > public/js/application.js",
+    "watch": "browserify src/application.js -o public/js/application.js --watch --debug"
   }
 
 }

@@ -28,7 +28,7 @@ module.exports = config;
 },{}],3:[function(require,module,exports){
 var guj     = require("geojson-utils"),
     geocode = require("./geocode"),
-    config  = require("../../../config");
+    config  = require("../config");
 
 var json = {},
     map,
@@ -256,7 +256,7 @@ jQuery(document).ready(function () {
 });
 
 
-},{"./geocode":1,"../../../config":2,"geojson-utils":4}],4:[function(require,module,exports){
+},{"./geocode":1,"../config":2,"geojson-utils":4}],4:[function(require,module,exports){
 (function () {
   var gju = this.gju = {};
 
