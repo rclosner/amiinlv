@@ -15,6 +15,17 @@ var geocode = function (address, callback) {
 module.exports = geocode;
 
 },{}],2:[function(require,module,exports){
+var config = {
+  latitude: 36.18,
+  longitude: -115.14,
+  initialZoom: 12,
+  finalZoom: 14,
+  fileName: "/data/region.geojson"
+}
+
+module.exports = config;
+
+},{}],3:[function(require,module,exports){
 var getCurrentLocation = function (success, error) {
   var geolocator = window.navigator.geolocation;
   if (geolocator) {
@@ -25,17 +36,6 @@ var getCurrentLocation = function (success, error) {
 }
 
 module.exports = getCurrentLocation;
-
-},{}],3:[function(require,module,exports){
-var config = {
-  latitude: 36.18,
-  longitude: -115.14,
-  initialZoom: 12,
-  finalZoom: 14,
-  fileName: "/data/region.geojson"
-}
-
-module.exports = config;
 
 },{}],4:[function(require,module,exports){
 var config = require("../config");
@@ -103,7 +103,7 @@ Map.prototype.removeMarkers = function () {
 
 module.exports = Map;
 
-},{"../config":3}],5:[function(require,module,exports){
+},{"../config":2}],5:[function(require,module,exports){
 var guj = require("geojson-utils"),
     geocodeAddress = require("./geocode"),
     getCurrentLocation = require("./current_location"),
@@ -285,7 +285,7 @@ jQuery(document).ready(function () {
 });
 
 
-},{"./geocode":1,"./current_location":2,"./map":4,"../config":3,"geojson-utils":6}],6:[function(require,module,exports){
+},{"./geocode":1,"./current_location":3,"./map":4,"../config":2,"geojson-utils":6}],6:[function(require,module,exports){
 (function () {
   var gju = this.gju = {};
 
