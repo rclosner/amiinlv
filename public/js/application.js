@@ -1,4 +1,15 @@
 ;(function(e,t,n){function r(n,i){if(!t[n]){if(!e[n]){var s=typeof require=="function"&&require;if(!i&&s)return s(n,!0);throw new Error("Cannot find module '"+n+"'")}var o=t[n]={exports:{}};e[n][0](function(t){var i=e[n][1][t];return r(i?i:t)},o,o.exports)}return t[n].exports}for(var i=0;i<n.length;i++)r(n[i]);return r})({1:[function(require,module,exports){
+var config = {
+  latitude: 36.18,
+  longitude: -115.14,
+  initialZoom: 12,
+  finalZoom: 14,
+  fileName: "/data/region.geojson"
+}
+
+module.exports = config;
+
+},{}],2:[function(require,module,exports){
 var GOOGLE_MAPS_URL = "http://maps.googleapis.com/maps/api/geocode/json";
 
 var geocode = function (address, callback) {
@@ -13,17 +24,6 @@ var geocode = function (address, callback) {
 }
 
 module.exports = geocode;
-
-},{}],2:[function(require,module,exports){
-var config = {
-  latitude: 36.18,
-  longitude: -115.14,
-  initialZoom: 12,
-  finalZoom: 14,
-  fileName: "/data/region.geojson"
-}
-
-module.exports = config;
 
 },{}],3:[function(require,module,exports){
 var getCurrentLocation = function (success, error) {
@@ -103,7 +103,7 @@ Map.prototype.removeMarkers = function () {
 
 module.exports = Map;
 
-},{"../config":2}],5:[function(require,module,exports){
+},{"../config":1}],5:[function(require,module,exports){
 var guj = require("geojson-utils"),
     geocodeAddress = require("./geocode"),
     getCurrentLocation = require("./current_location"),
@@ -285,7 +285,7 @@ jQuery(document).ready(function () {
 });
 
 
-},{"./geocode":1,"./current_location":3,"./map":4,"../config":2,"geojson-utils":6}],6:[function(require,module,exports){
+},{"./geocode":2,"./current_location":3,"./map":4,"../config":1,"geojson-utils":6}],6:[function(require,module,exports){
 (function () {
   var gju = this.gju = {};
 
